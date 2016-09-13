@@ -11,14 +11,14 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include <readline/readline.h>
-#include <readline/history.h>
+
 
 #include "read.h"
 
 
 
-void flip( uint *i ) {//inverse le true et le false
+void flip( uint *i )
+ {
 
     if ( *i == FALSE ) {
         *i = TRUE;
@@ -318,26 +318,26 @@ int is_integer(char num)
 
 int is_symbol(char sym)
 {
-    if(sym>=0x3F  && sym<=0x7A || sym>=0x24 && sym<=0x2D || sym==0x21 ||sym==0x22)
+    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x2D) || sym==0x21 ||sym==0x22)
         return 1;
     else return 0;
 }
 
 char get_next_char(char** chaine)
 {	char c;
-	//on prend le caractere indique par chaine puis on incremente l'adresse du pointeur sur chaine
+	/*on prend le caractere indique par chaine puis on incremente l adresse du pointeur sur chaine*/
 	c=**chaine;
-	*chaine=*chaine+1; //verif les pointeurs
-	if (c=' ') return get_next_char(chaine);
-	else	return c;
+	*chaine=*chaine+1; /// verif les pointeurs 
+	if (c=' ') {return get_next_char(chaine);}
+	else	{return c;}
 } 
 
-object make_symbol(char* chaine)
+object make_symbol(char* chaine,char c)
 {
 	object atome;
 	char new_carac;
 	atome->type=1;
-	atome=sym;
+	atome->this=c;	
 	new_carac=get_next_char(&chaine);
 	while(is_caractere(new_carac))
 	{
@@ -352,11 +352,11 @@ object make_caractere(char* chaine)
 	object atome;
 	char new_carac=get_next_char(&chaine);
 	atome->type=4;
-	atome->this='#'+'\';
+	(char*)atome->this="#\'";
 	new_carac=get_next_char(&chaine);
 	while(is_symbol(new_carac))
 	{
-		atome->this=strcat(atome->this,&new_carac);
+		atome->this=strcat((char*)atome->this,&new_carac);
 		new_carac=get_next_char(&chaine);
 	}
 	return atome;
@@ -367,11 +367,11 @@ object make_integer( char* num, char c)
 	object atome;
 	char next;
 	atome->type=3;
-	atome->this = atoi(&c);
+	atome->this = (num)atoi(&c);
 	next=get_next_char(&num);
 	while (next>=0x30 && next<=0x39)
 	{
-		atome->this=atome->this*(object)10+atoi(&next);
+		atome->this=atome->this*(object)10+(num)atoi(&next);
 		next=get_next_char(&num);
 	}
 	return atome;
@@ -396,14 +396,14 @@ object make_string(char *caractere,char c)
 object sfs_read_atom( char *input, uint *here ) {
 
     	object atome = NULL;
-	char* temp_chaine=chaine;
+	char* temp_chaine=input;
    	char c;
 
-    	c=get_next_char(&temp_chaine); //fonction a realiser
+    	c=get_next_char(&temp_chaine);
    	 switch(c)   {
     	case '#' :
        	 	c=get_next_char(&temp_chaine);
-	        if(c=='\' )
+	        if(c=='\'' )
        		 {
             		c=get_next_char(&temp_chaine);
             		atome=make_caractere(temp_chaine);
@@ -416,18 +416,18 @@ object sfs_read_atom( char *input, uint *here ) {
                 	else if (c=='f') 
 			{	atome->type=5;
 				atome->this=false;}
-                	else return VALUE_ERROR; //erreur invalide atome;
+                	else return 0x00;//erreur invalide atome
 			return atome;
             }
         break;
     case '"' :
-        return make_string(temp_chaine);
+        return make_string(temp_chaine,c);
 
         break;
     }
     if(is_symbol(c))
     {
-        return make_symbol(temp_chaine);
+        return make_symbol(temp_chaine,c);
     }
     else if(is_integer(c))
     {
@@ -439,6 +439,13 @@ object sfs_read_atom( char *input, uint *here ) {
 object sfs_read_pair( char *stream, uint *i ) {
 
     object pair = NULL;
+	
+
+	char c=get_next_char(&stream);
+	
+	if(c=='(')
+	
+	else {return sfs_read_atom();}
 
     return pair;
 }
