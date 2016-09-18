@@ -292,6 +292,148 @@ uint  sfs_get_sexpr( char *input, FILE *fp ) {
 }
 
 
+int is_integer(char num)
+{
+    if (num>=0x30 && num<=0x39)
+        return 1;
+    else return 0;
+}
+
+int is_symbol(char sym)
+{
+    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x2D) || sym==0x21 ||sym==0x22)
+        return 1;
+    else return 0;
+}
+
+char get_next_char(char* input, uint* here)
+{	char c;
+	/*on prend le caractere indique par chaine puis on incremente l adresse du pointeur sur chaine*/
+	c=input[*here];
+	*here=*here+1; /// verif les pointeurs
+	if (c=' ') {return get_next_char(input,here);}
+	else	{return c;}
+}
+
+object make_symbol(char* input,uint * here,char c)
+{
+	object atome;
+	char new_carac;
+	int i=1;
+	char symbole[STRLEN];
+	atome->type=1;
+	symbole[0]=c;
+	new_carac=get_next_char(input,here);
+	while(is_caractere(new_carac))
+	{
+		symbole[i]=new_carac;
+		new_carac=get_next_char(input,here);
+		i++;
+	}
+	strcpy(atome->data.String,symbole);
+	return atome;
+}
+
+object make_caractere(char* input,uint *here)
+{
+	object atome;
+	char new_carac;
+	int i=2;
+	char caractere[STRLEN];
+	atome->type=4;
+	caractere[0]='#';
+	caractere[1]='\'';
+	new_carac=get_next_char(input,here);
+	while(is_symbol(new_carac))
+	{
+		caractere[i]=new_carac;
+		new_carac=get_next_char(input,here);
+		i++;
+	}
+	strcpy(atome->data.String,caractere);
+	return atome;
+}
+
+object make_integer( char* input, uint * here,char c)
+{
+	object atome;
+	char next;
+	atome->type=3;
+	int integer=0;
+	integer = atoi(&c);
+	next=get_next_char(input,here);
+	while (next>=0x30 && next<=0x39)
+	{
+		integer=integer*10+atoi(&next);
+		next=get_next_char(input,here);
+	}
+	atome->data.number=integer;
+	return atome;
+}
+
+
+object make_string(char *input,uint * here)
+{
+	object atome;
+	char next;
+	int i=1;
+	char chaine[STRLEN];
+	atome->type=5;
+	chaine[0]='"';
+	next=get_next_char(input,here);
+	while (is_caracter(next))
+	{
+		chaine[i]=next;
+		next=get_next_char(input,here);
+		i++;
+	}
+	chaine[i]='"';
+	strcpy(atome->data.String,chaine);
+	return atome;
+}
+
+// ??????????
+object sfs_read_atom( char *input, uint *here ) {
+
+    	object atome = NULL;
+        char c;
+
+    	c=get_next_char(input, here);
+        switch(c)   {
+    	case '#' :
+       	 	c=get_next_char(input,here);
+	        if(c=='\'' )
+       		 {
+            		c=get_next_char(input,here);
+            		atome=make_caractere(input,here);
+			return atome;}
+        	else
+            {
+                	if (c=='t')
+			{	atome->type=5;
+				atome->this=true;}
+                	else if (c=='f')
+			{	atome->type=5;
+				atome->this=false;}
+                	else return 0x00;//erreur invalide atome
+			return atome;
+            }
+        break;
+    case '"' :
+        return make_string(input,here);
+
+        break;
+    }
+    if(is_symbol(c))
+    {
+        return make_symbol(input,here,c);
+    }
+    else if(is_integer(c))
+    {
+        return make_integer(input,here,c);
+    }
+
+}
 object sfs_read( char *input, uint *here ) {
 
     if ( input[*here] == '(' ) {
@@ -309,144 +451,23 @@ object sfs_read( char *input, uint *here ) {
     }
 }
 
-int is_integer(char num)
-{
-    if (num>=0x30 && num<=0x39)
-        return 1;
-    else return 0;
-}
-
-int is_symbol(char sym)
-{
-    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x2D) || sym==0x21 ||sym==0x22)
-        return 1;
-    else return 0;
-}
-
-char get_next_char(char** chaine)
-{	char c;
-	/*on prend le caractere indique par chaine puis on incremente l adresse du pointeur sur chaine*/
-	c=**chaine;
-	*chaine=*chaine+1; /// verif les pointeurs 
-	if (c=' ') {return get_next_char(chaine);}
-	else	{return c;}
-} 
-
-object make_symbol(char* chaine,char c)
-{
-	object atome;
-	char new_carac;
-	atome->type=1;
-	atome->this=c;	
-	new_carac=get_next_char(&chaine);
-	while(is_caractere(new_carac))
-	{
-		atome=strcat(atome,&new_carac);
-		new_carac=get_next_char(&chaine);
-	}
-	return atome;
-}
-
-object make_caractere(char* chaine)
-{
-	object atome;
-	char new_carac=get_next_char(&chaine);
-	atome->type=4;
-	(char*)atome->this="#\'";
-	new_carac=get_next_char(&chaine);
-	while(is_symbol(new_carac))
-	{
-		atome->this=strcat((char*)atome->this,&new_carac);
-		new_carac=get_next_char(&chaine);
-	}
-	return atome;
-}
-
-object make_integer( char* num, char c)
-{
-	object atome;
-	char next;
-	atome->type=3;
-	atome->this = (num)atoi(&c);
-	next=get_next_char(&num);
-	while (next>=0x30 && next<=0x39)
-	{
-		atome->this=atome->this*(object)10+(num)atoi(&next);
-		next=get_next_char(&num);
-	}
-	return atome;
-}
-
-
-object make_string(char *caractere,char c)
-{
-	object atome;
-	char next=get_next_char(&caractere);
-	atome->type=5;
-	atome->this=c;
-	while (is_caracter(next))
-	{	
-		atome->this=strcat(atome->this, &next);
-		next=get_next_char(&caractere);
-	}
-	return atome;
-}
-
-// ??????????
-object sfs_read_atom( char *input, uint *here ) {
-
-    	object atome = NULL;
-	char* temp_chaine=input;
-   	char c;
-
-    	c=get_next_char(&temp_chaine);
-   	 switch(c)   {
-    	case '#' :
-       	 	c=get_next_char(&temp_chaine);
-	        if(c=='\'' )
-       		 {
-            		c=get_next_char(&temp_chaine);
-            		atome=make_caractere(temp_chaine);
-			return atome;}
-        	else
-            {
-                	if (c=='t') 
-			{	atome->type=5;
-				atome->this=true;}
-                	else if (c=='f') 
-			{	atome->type=5;
-				atome->this=false;}
-                	else return 0x00;//erreur invalide atome
-			return atome;
-            }
-        break;
-    case '"' :
-        return make_string(temp_chaine,c);
-
-        break;
-    }
-    if(is_symbol(c))
-    {
-        return make_symbol(temp_chaine,c);
-    }
-    else if(is_integer(c))
-    {
-        return make_integer(temp_chaine,c);
-    }
-    
-}
-
 object sfs_read_pair( char *stream, uint *i ) {
 
-    object pair = NULL;
-	
+    object paire = NULL;
 
-	char c=get_next_char(&stream);
-	
-	if(c=='(')
-	
-	else {return sfs_read_atom();}
+    paire->type=0;
+    if(stream[*i]=' ')
+    {
+        (*i)++;
+    }
+    paire->data.pair.car=sfs_read(stream,i);
+    (*i)++;
+    if(stream[*i]=')')
+    {
+        paire->data.pair.cdr=nil;
+    }
+    else {paire->data.pair.cdr=sfs_read_pair(stream,i);}
 
-    return pair;
+    return paire;
 }
 
