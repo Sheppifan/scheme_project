@@ -1,4 +1,3 @@
-
 /**
  * @file read.c
  * @author François Cayre <cayre@yiking.(null)>
@@ -15,6 +14,9 @@
 
 #include "read.h"
 
+#define false  FALSE
+#define true  TRUE
+#define empty_list  NULL
 
 
 void flip( uint *i )
@@ -120,7 +122,8 @@ uint  sfs_get_sexpr( char *input, FILE *fp ) {
 
     do {
         ret = NULL;
-        chunk = NULL;
+        chunk=k;
+        memset( chunk, '\0', BIGSTRING );
 
         /* si en mode interactif*/
         if ( stdin == fp ) {
@@ -144,12 +147,13 @@ uint  sfs_get_sexpr( char *input, FILE *fp ) {
             }
 
             /*saisie de la prochaine ligne à ajouter dans l'input*/
-            chunk = readline( sfs_prompt );
+            printf("%s",sfs_prompt);
+            ret = fgets( chunk, BIGSTRING, fp );
+            if (ret && chunk[strlen(chunk)-1] == '\n') chunk[strlen(chunk)-1] = '\0';
+
         }
         /*si en mode fichier*/
         else {
-            chunk=k;
-            memset( chunk, '\0', BIGSTRING );
             ret = fgets( chunk, BIGSTRING, fp );
 
             if ( NULL == ret ) {
@@ -285,9 +289,6 @@ uint  sfs_get_sexpr( char *input, FILE *fp ) {
     /* Suppression des espaces restant a la fin de l'expression, notamment le dernier '\n' */
     while (isspace(input[strlen(input)-1])) input[strlen(input)-1] = '\0';
 
-    if(stdin == fp) {
-        add_history( input );
-    }
     return S_OK;
 }
 
@@ -317,14 +318,14 @@ char get_next_char(char* input, uint* here)
 
 object make_symbol(char* input,uint * here,char c)
 {
-	object atome;
+	object atome=NULL;
 	char new_carac;
 	int i=1;
 	char symbole[STRLEN];
 	atome->type=1;
 	symbole[0]=c;
 	new_carac=get_next_char(input,here);
-	while(is_caractere(new_carac))
+	while(is_symbol(new_carac))
 	{
 		symbole[i]=new_carac;
 		new_carac=get_next_char(input,here);
@@ -336,7 +337,7 @@ object make_symbol(char* input,uint * here,char c)
 
 object make_caractere(char* input,uint *here)
 {
-	object atome;
+	object atome=NULL;
 	char new_carac;
 	int i=2;
 	char caractere[STRLEN];
@@ -356,7 +357,7 @@ object make_caractere(char* input,uint *here)
 
 object make_integer( char* input, uint * here,char c)
 {
-	object atome;
+	object atome=NULL;
 	char next;
 	atome->type=3;
 	int integer=0;
@@ -367,21 +368,21 @@ object make_integer( char* input, uint * here,char c)
 		integer=integer*10+atoi(&next);
 		next=get_next_char(input,here);
 	}
-	atome->data.number=integer;
+	atome->data.number.this.integer=integer;
 	return atome;
 }
 
 
 object make_string(char *input,uint * here)
 {
-	object atome;
+	object atome=NULL;
 	char next;
 	int i=1;
 	char chaine[STRLEN];
 	atome->type=5;
 	chaine[0]='"';
 	next=get_next_char(input,here);
-	while (is_caracter(next))
+	while (is_symbol(next))
 	{
 		chaine[i]=next;
 		next=get_next_char(input,here);
@@ -411,11 +412,10 @@ object sfs_read_atom( char *input, uint *here ) {
             {
                 	if (c=='t')
 			{	atome->type=5;
-				atome->this=true;}
+				atome->data.boolean=true;}
                 	else if (c=='f')
 			{	atome->type=5;
-				atome->this=false;}
-                	else return 0x00;//erreur invalide atome
+				atome->data.boolean=false;}
 			return atome;
             }
         break;
@@ -432,7 +432,7 @@ object sfs_read_atom( char *input, uint *here ) {
     {
         return make_integer(input,here,c);
     }
-
+	return NULL;	
 }
 object sfs_read( char *input, uint *here ) {
 
@@ -456,18 +456,17 @@ object sfs_read_pair( char *stream, uint *i ) {
     object paire = NULL;
 
     paire->type=0;
-    if(stream[*i]=' ')
+    if(stream[(*i)]=' ')
     {
         (*i)++;
     }
     paire->data.pair.car=sfs_read(stream,i);
     (*i)++;
-    if(stream[*i]=')')
+    if(stream[(*i)]=')')
     {
-        paire->data.pair.cdr=nil;
+        paire->data.pair.cdr=make_nil();
     }
     else {paire->data.pair.cdr=sfs_read_pair(stream,i);}
 
     return paire;
 }
-
