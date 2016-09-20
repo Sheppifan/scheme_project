@@ -1,4 +1,3 @@
-
 /**
  * @file read.c
  * @author François Cayre <cayre@yiking.(null)>
@@ -15,9 +14,10 @@
 
 #include "read.h"
 
-extern int false=FALSE;
-extern int true=TRUE;
-extern char* empty_list=NULL;
+#define false  FALSE
+#define true  TRUE
+#define empty_list  NULL
+
 
 void flip( uint *i )
  {
@@ -318,14 +318,14 @@ char get_next_char(char* input, uint* here)
 
 object make_symbol(char* input,uint * here,char c)
 {
-	object atome;
+	object atome=NULL;
 	char new_carac;
 	int i=1;
 	char symbole[STRLEN];
 	atome->type=1;
 	symbole[0]=c;
 	new_carac=get_next_char(input,here);
-	while(is_caractere(new_carac))
+	while(is_symbol(new_carac))
 	{
 		symbole[i]=new_carac;
 		new_carac=get_next_char(input,here);
@@ -337,7 +337,7 @@ object make_symbol(char* input,uint * here,char c)
 
 object make_caractere(char* input,uint *here)
 {
-	object atome;
+	object atome=NULL;
 	char new_carac;
 	int i=2;
 	char caractere[STRLEN];
@@ -357,7 +357,7 @@ object make_caractere(char* input,uint *here)
 
 object make_integer( char* input, uint * here,char c)
 {
-	object atome;
+	object atome=NULL;
 	char next;
 	atome->type=3;
 	int integer=0;
@@ -375,14 +375,14 @@ object make_integer( char* input, uint * here,char c)
 
 object make_string(char *input,uint * here)
 {
-	object atome;
+	object atome=NULL;
 	char next;
 	int i=1;
 	char chaine[STRLEN];
 	atome->type=5;
 	chaine[0]='"';
 	next=get_next_char(input,here);
-	while (is_caracter(next))
+	while (is_symbol(next))
 	{
 		chaine[i]=next;
 		next=get_next_char(input,here);
@@ -416,7 +416,6 @@ object sfs_read_atom( char *input, uint *here ) {
                 	else if (c=='f')
 			{	atome->type=5;
 				atome->data.boolean=false;}
-                	else return 0x00;//erreur invalide atome
 			return atome;
             }
         break;
@@ -433,7 +432,7 @@ object sfs_read_atom( char *input, uint *here ) {
     {
         return make_integer(input,here,c);
     }
-
+	return NULL;	
 }
 object sfs_read( char *input, uint *here ) {
 
@@ -465,10 +464,9 @@ object sfs_read_pair( char *stream, uint *i ) {
     (*i)++;
     if(stream[(*i)]=')')
     {
-        paire->data.pair.cdr=nil;
+        paire->data.pair.cdr=make_nil();
     }
     else {paire->data.pair.cdr=sfs_read_pair(stream,i);}
 
     return paire;
 }
-
