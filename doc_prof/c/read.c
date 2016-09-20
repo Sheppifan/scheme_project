@@ -307,22 +307,28 @@ int is_symbol(char sym)
     else return 0;
 }
 
+int is_caractere(char sym)
+{
+    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x2D) || (sym>=0x20 && sym<=0x22))
+        return 1;
+    else return 0;
+}
+
 char get_next_char(char* input, uint* here)
 {	char c;
 	/*on prend le caractere indique par chaine puis on incremente l adresse du pointeur sur chaine*/
 	c=input[*here];
 	*here=*here+1; /// verif les pointeurs
-	if (c=' ') {return get_next_char(input,here);}
+	if (c==' ') {return get_next_char(input,here);}
 	else	{return c;}
 }
 
 object make_symbol(char* input,uint * here,char c)
 {
-	object atome=NULL;
+	object atome=make_object(6);
 	char new_carac;
 	int i=1;
 	char symbole[STRLEN];
-	atome->type=1;
 	symbole[0]=c;
 	new_carac=get_next_char(input,here);
 	while(is_symbol(new_carac))
@@ -337,11 +343,10 @@ object make_symbol(char* input,uint * here,char c)
 
 object make_caractere(char* input,uint *here)
 {
-	object atome=NULL;
+	object atome=make_object(1);
 	char new_carac;
 	int i=2;
 	char caractere[STRLEN];
-	atome->type=4;
 	caractere[0]='#';
 	caractere[1]='\'';
 	new_carac=get_next_char(input,here);
@@ -357,9 +362,8 @@ object make_caractere(char* input,uint *here)
 
 object make_integer( char* input, uint * here,char c)
 {
-	object atome=NULL;
+	object atome=make_object(0);
 	char next;
-	atome->type=3;
 	int integer=0;
 	integer = atoi(&c);
 	next=get_next_char(input,here);
@@ -375,14 +379,13 @@ object make_integer( char* input, uint * here,char c)
 
 object make_string(char *input,uint * here)
 {
-	object atome=NULL;
+	object atome=make_object(2);
 	char next;
 	int i=1;
 	char chaine[STRLEN];
-	atome->type=5;
 	chaine[0]='"';
 	next=get_next_char(input,here);
-	while (is_symbol(next))
+	while (is_caractere(next))
 	{
 		chaine[i]=next;
 		next=get_next_char(input,here);
@@ -396,7 +399,7 @@ object make_string(char *input,uint * here)
 // ??????????
 object sfs_read_atom( char *input, uint *here ) {
 
-    	object atome = NULL;
+    	object atome = make_object(1);
         char c;
 
     	c=get_next_char(input, here);
@@ -404,7 +407,7 @@ object sfs_read_atom( char *input, uint *here ) {
     	case '#' :
        	 	c=get_next_char(input,here);
 	        if(c=='\'' )
-       		 {
+       		 {	
             		c=get_next_char(input,here);
             		atome=make_caractere(input,here);
 			return atome;}
@@ -412,11 +415,13 @@ object sfs_read_atom( char *input, uint *here ) {
             {
                 	if (c=='t')
 			{	atome->type=5;
-				atome->data.boolean=true;}
+				atome->data.boolean=true;
+				return atome;}
                 	else if (c=='f')
 			{	atome->type=5;
-				atome->data.boolean=false;}
-			return atome;
+				atome->data.boolean=false;
+				return atome;}
+			else return 0x00;/////////////////////////////erreur a retourner
             }
         break;
     case '"' :
@@ -424,7 +429,26 @@ object sfs_read_atom( char *input, uint *here ) {
 
         break;
     }
-    if(is_symbol(c))
+	if (c=='+' || c=='-')
+	{	
+		c=get_next_char(input,here);
+		*here=(*here)-2;
+		if(c==' ')
+		{
+			c=get_next_char(input,here);
+			return make_symbol(input,here,c);}
+		else if(is_integer(c))
+		{	c=get_next_char(input,here);
+			if(c=='-')
+			{	c=get_next_char(input,here);
+				atome=make_integer(input,here,c);
+				atome->data.number.this.integer=(-1)*atome->data.number.this.integer;
+				return atome;}
+			else { c=get_next_char(input,here);
+				return make_integer(input,here,c);} 
+		}
+	}
+    else if(is_symbol(c))
     {
         return make_symbol(input,here,c);
     }
@@ -453,16 +477,16 @@ object sfs_read( char *input, uint *here ) {
 
 object sfs_read_pair( char *stream, uint *i ) {
 
-    object paire = NULL;
+    object paire = make_object(3);
 
     paire->type=0;
-    if(stream[(*i)]=' ')
+    while(stream[(*i)]==' ')
     {
         (*i)++;
     }
     paire->data.pair.car=sfs_read(stream,i);
     (*i)++;
-    if(stream[(*i)]=')')
+    if(stream[(*i)]==')')
     {
         paire->data.pair.cdr=make_nil();
     }
