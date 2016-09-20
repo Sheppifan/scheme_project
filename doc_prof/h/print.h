@@ -17,7 +17,7 @@ extern "C" {
 
 #include "object.h"
 
-
+  int test_atom_pair_empty(object );
 void sfs_print( object );
 
 void sfs_print_atom( object );
