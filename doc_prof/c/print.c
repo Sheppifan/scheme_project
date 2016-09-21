@@ -5,6 +5,10 @@
 
 /// Fonction retournant 0,1,2,3 respectivement si ce qui est passé en paramètre est non défini, un atome, un liste, une empty_list
 int test_atom_pair_empty(object obj){
+   printf("entree dans test_atom_pair_empty\n");
+    printf("add obj=%p\n",obj);
+    printf("add obj->data=%p\n",&(obj->data));
+    printf("obj->type=%d\n",obj->type);
   if (((obj->type>=0)&&(obj->type<=2))||((obj->type<=8)&&(obj->type>=5))){
     return 1;
   }
@@ -16,7 +20,7 @@ int test_atom_pair_empty(object obj){
 	if(obj->type==4){
 	  return 3;
 	}
-	else 
+	else
 	  {
 	    fprintf(stderr, "Erreur: L'object* n'a pas de type défini!!");
 	    exit(1);
@@ -30,7 +34,9 @@ int test_atom_pair_empty(object obj){
 ///Elle vérifie que c'est bien un atome PUIS trouve son type PUIS renvoie sa valeur et son type
 void sfs_print_atom(object obj){
   char* type;
+  printf("entree dans print_atom\n");
   if (test_atom_pair_empty(obj)==1){
+    printf("obj->type %d\n",obj->type);
     switch (obj->type){
     case '6':
       type="symbol";
@@ -41,6 +47,7 @@ void sfs_print_atom(object obj){
       fprintf(stdout, "Valeur : %d" , obj->data.boolean);
       break;
     case '0':
+        printf("entree dans case integer\n")
       type="integer";
       fprintf(stdout, "Valeur : %d" , obj->data.number.this.integer);
       break;
@@ -74,12 +81,18 @@ void sfs_print_atom(object obj){
 
 ///Fonction print globale !
  void sfs_print(object obj){
+   printf("entree dans print\n");
    if (test_atom_pair_empty(obj)==2){
+       printf("test_atom effec=2\n");
+        printf("%p\n",&(obj->data.pair.car));
+        printf("%d\n",obj->data.pair.car->type);
      if (test_atom_pair_empty(obj->data.pair.car)==2){
+          printf("test_atom data.pair.Car effec=2\n");
        fprintf(stdout, "(");
-     }  
+     }
      sfs_print_pair(obj);
      if (test_atom_pair_empty(obj->data.pair.car)==2){
+           printf("test_atom data.pair.Car apres print_pair effec=2\n");
        fprintf(stdout, ")");
 
      }
@@ -87,13 +100,17 @@ void sfs_print_atom(object obj){
   else {
     if (test_atom_pair_empty(obj)==1){
       sfs_print_atom(obj);
+      printf("vers line 90\n");
+      printf("car=%p\n",&(obj->data.pair.car));
+      printf("cdr=%p\n",&(obj->data.pair.cdr));
+      printf("cdr->type=%p\n",&(obj->data.pair.cdr->type));
       if (obj->data.pair.cdr->type != SFS_NIL){
 	fprintf(stdout, " ");
       }
     }
     else {
       if (test_atom_pair_empty(obj)==3){
-	fprintf(stdout,".................");
+	fprintf(stdout,"()");
       }
       else {
       fprintf(stderr,"Erreur: l'object* n'est ni une liste ni un atome" );
@@ -105,7 +122,8 @@ void sfs_print_atom(object obj){
 
 ///Fonction affichant une paire
 void sfs_print_pair(object paire){
+    printf("entree dans print_pair \n");
      sfs_print(paire->data.pair.car);
      sfs_print(paire->data.pair.cdr);
 }
-    
+
