@@ -302,17 +302,11 @@ int is_integer(char num)
 
 int is_symbol(char sym)
 {
-    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x2D) || sym==0x21 ||sym==0x22)
+    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x27) || (sym>=0x2A && sym<=0x2F) || sym==0x21 ||sym==0x22)
         return 1;
     else return 0;
 }
 
-/*int is_caractere(char sym)
-{
-    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x2D) || (sym>=0x20 && sym<=0x22))
-        return 1;
-    else return 0;
-}*/
 
 char get_next_char(char* input, uint* here)
 {	char c;
@@ -337,8 +331,8 @@ object make_symbol(char* input,uint * here,char c)
 		new_carac=get_next_char(input,here);
 		i++;
 	}
-	//symbole[i]=NULL;
-	//printf("sym=%s\n",symbole);
+	symbole[i]='\0';
+	printf("sym=%s\n",symbole);
 	strcpy(atome->data.String,symbole);
 	//printf("symbole =%s\n",atome->data.String);
 	return atome;
@@ -348,10 +342,12 @@ object make_caractere(char* input,uint *here)
 {
 	object atome=make_object(1);
 	char new_carac;
-	int i=2;
+	int i=3;
 	char caractere[STRLEN];
 	caractere[0]='#';
 	caractere[1]=0x5C;
+	caractere[2]=input[(*here)];
+	printf("char 1 =%c      char 2=%c     char 3 = %c\n",input[(*here)-1],input[(*here)],input[(*here)+1]);
 	new_carac=get_next_char(input,here);
 	printf("new_carac=%c\n",new_carac);
 	while(is_symbol(new_carac))
@@ -360,6 +356,7 @@ object make_caractere(char* input,uint *here)
 		new_carac=get_next_char(input,here);
 		i++;
 	}
+	caractere[i]='\0';
 	printf("caractere=%s\n",caractere);
 	strcpy(atome->data.String,caractere);
 	return atome;
@@ -400,6 +397,7 @@ object make_string(char *input,uint * here)
 		i++;
 	}
 	chaine[i]='"';
+	chaine[i+1]='\0';
 	(*here)++;
 	//printf("chaine = %s\n",chaine);
 	strcpy(atome->data.String,chaine);
