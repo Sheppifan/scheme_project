@@ -472,6 +472,10 @@ object sfs_read_atom( char *input, uint *here ) {
 }
 object sfs_read( char *input, uint *here ) {
     //printf("entree dans fonction read\n");
+    while(input[(*here)]==' '||input[*here]=='	')
+    {
+        (*here)++;
+    }
     if ( input[*here] == '(' ) {
            // printf("entre dans (\n");
         if ( input[(*here)+1] == ')' ) {
@@ -484,10 +488,7 @@ object sfs_read( char *input, uint *here ) {
         }
     }
     else {
-        while(input[(*here)]==' ')
-    {
-        (*here)++;
-    }
+
        // printf("entree dans sans (\n");
         return sfs_read_atom( input, here );
     }
@@ -497,7 +498,7 @@ object sfs_read_pair( char *stream, uint *i ) {
 
     object paire = make_object(3);
   // printf("entree dans read_pair\n");
-    while(stream[(*i)]==' ')
+    while(stream[(*i)]==' '||stream[*i]=='	')
     {
         (*i)++;
     }
@@ -516,13 +517,19 @@ object sfs_read_pair( char *stream, uint *i ) {
     else
     {
         paire->data.pair.car=sfs_read(stream,i);
-        printf("type car=%d\n",paire->data.pair.car->type);
+        //printf("type car=%d\n",paire->data.pair.car->type);
        /* printf("type du car=%d\n",paire->data.pair.car->type);
         printf("i=%d et char[%d]=%c\n",*i,*i,stream[(*i)]);*/
+        //printf("charav[%d]=&%c&\n",*i,stream[*i]);
+        while(stream[(*i)]==' '||stream[*i]=='	')
+        {
+            (*i)++;
+        }
+       // printf("charap[%d]=&%c&\n",*i,stream[*i]);
         if(stream[(*i)]==')')
         {
             paire->data.pair.cdr=make_nil();
-            printf("type cdr=%d\n",paire->data.pair.cdr->type);
+           // printf("type cdr=%d\n",paire->data.pair.cdr->type);
             (*i)++;
           /*  printf("cdr=%p\n",&(paire->data.pair.cdr));
         printf("point cdr =%p\n",paire->data.pair.cdr);
