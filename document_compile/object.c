@@ -10,6 +10,7 @@
 
 #include "object.h"
 #include "mem.h"
+#include "read.h"
 
 
 object make_object( uint type ) {
@@ -39,7 +40,7 @@ int is_integer(char num)
 
 int is_symbol(char sym)
 {   //teste si sym est un caractere (lettre ou caractere speciaux)
-    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x27) || (sym>=0x2A && sym<=0x2F) || sym==0x21 ||sym==0x22)
+    if((sym>=0x3A  && sym<=0x7E)|| (sym>=0x24 && sym<=0x26) || (sym>=0x2A && sym<=0x2F) || sym==0x21 )
         return 1;
     else return 0;
 }
