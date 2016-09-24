@@ -22,12 +22,13 @@ typedef struct object_t {
 
     uint type;
 
-    union {
+    union{
 
         num              number;
-        char             character;
-        string           string;
+        string          caractere;
+        string           String;
         string           symbol;
+        int              boolean;
 
         struct pair_t {
             struct object_t *car;
@@ -36,13 +37,19 @@ typedef struct object_t {
 
         struct object_t *special;
 
-    } this;
+    } data;
 
 } *object;
 
 
 object make_object( uint type );
 object make_nil( void );
+int is_integer(char num);
+int is_symbol(char sym);
+object make_symbol(char* input,uint * here,char c);
+object make_caractere(char* input,uint *here);
+object make_integer( char* input, uint * here,char c);
+object make_string(char *input,uint * here);
 
 #define SFS_NUMBER       0x00
 #define SFS_CHARACTER    0x01

@@ -26,7 +26,7 @@ uint   sfs_get_sexpr( string input, FILE *fp );
 object sfs_read( char *input, uint *here );
 object sfs_read_atom( char *input, uint *here );
 object sfs_read_pair( char *stream, uint *i );
-
+char get_next_char(char* input, uint* here);
 
 #ifdef __cplusplus
 }
