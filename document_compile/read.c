@@ -325,7 +325,7 @@ object make_symbol(char* input,uint * here,char c)
 	symbole[0]=c;
 	//printf("sym_deb=%s\n",symbole);
 	new_carac=get_next_char(input,here);
-	while(is_symbol(new_carac))
+	while(is_symbol(new_carac)||is_integer(new_carac))
 	{
 		symbole[i]=new_carac;
 		new_carac=get_next_char(input,here);
@@ -347,18 +347,26 @@ object make_caractere(char* input,uint *here)
 	caractere[0]='#';
 	caractere[1]=0x5C;
 	caractere[2]=input[(*here)];
-	//printf("char 1 =%c      char 2=%c     char 3 = %c\n",input[(*here)-1],input[(*here)],input[(*here)+1]);
 	new_carac=get_next_char(input,here);
-	//printf("new_carac=%c\n",new_carac);
+	if(!(is_symbol(new_carac)&& is_integer(caractere[2])) && (new_carac!='\0'))
+    {
+        caractere[0]='\0';
+        strcpy(atome->data.caractere,caractere);
+        return atome;
+    }
 	while(is_symbol(new_carac) || new_carac==0x28 || new_carac==0x29)
 	{
 		caractere[i]=new_carac;
 		new_carac=get_next_char(input,here);
 		i++;
 	}
+    if(!(is_symbol(caractere[i-1])&& is_integer(new_carac))&& (i>3))
+    {   caractere[0]='\0';
+        strcpy(atome->data.caractere,caractere);
+        return atome;
+    }
 	caractere[i]='\0';
-	//printf("caractere=%s\n",caractere);
-	strcpy(atome->data.String,caractere);
+	strcpy(atome->data.caractere,caractere);
 	return atome;
 }
 
@@ -387,19 +395,27 @@ object make_string(char *input,uint * here)
 	object atome=make_object(2);
 	char next;
 	int i=1;
-	char chaine[STRLEN];
+	char chaine[3*STRLEN];
 	chaine[0]='"';
 	next=get_next_char(input,here);
-	while (next != 0x22)
+	while ((next != 0x22))
 	{
+
 		chaine[i]=next;
 		next=get_next_char(input,here);
 		i++;
+		if(chaine[i-1]==0x5C && next==0x22)
+        {
+             chaine[i]=next;
+             next=get_next_char(input,here);
+             i++;
+        }
+
 	}
 	chaine[i]='"';
 	chaine[i+1]='\0';
 	(*here)++;
-	//printf("chaine = %s\n",chaine);
+
 	strcpy(atome->data.String,chaine);
 	return atome;
 }
@@ -433,7 +449,7 @@ object sfs_read_atom( char *input, uint *here ) {
 				atome->data.boolean=false;
 				(*here)++;
 				return atome;}
-			else return 0x00;/////////////////////////////erreur a retourner
+			else {ERROR_MSG("Atome possedant # invalide"); return NULL;}
             }
         break;
     case '"' :
@@ -468,6 +484,7 @@ object sfs_read_atom( char *input, uint *here ) {
     {
         return make_integer(input,here,c);
     }
+	ERROR_MSG("Atome invalide");
 	return NULL;
 }
 object sfs_read( char *input, uint *here ) {
