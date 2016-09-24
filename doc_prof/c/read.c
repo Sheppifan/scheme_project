@@ -340,10 +340,10 @@ object sfs_read_atom( char *input, uint *here ) {
         {
             c=get_next_char(input,here);
             *here=(*here)-2;
-            if(c==' ')
+            if(c==' ' || c=='\0')
             {
                 c=get_next_char(input,here);
-                return make_symbol(input,here,c);}
+               return make_symbol(input,here,c);}
             else if(is_integer(c))
             {	c=get_next_char(input,here);
                 if(c=='-')
@@ -366,7 +366,7 @@ object sfs_read_atom( char *input, uint *here ) {
         {
             return make_integer(input,here,c);
         }
-        ERROR_MSG("Atome invalide");
+        WARNING_MSG("Atome invalide");
         return NULL;
 }
 
