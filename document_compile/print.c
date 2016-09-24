@@ -123,7 +123,7 @@ void sfs_print_atom(object obj){
 }
 void sfs_print(object obj)
 {
-    fprintf(stdout,"(");
+    if(obj->type==3) fprintf(stdout,"(");
     sfs_print_aux(obj);
 }
 
