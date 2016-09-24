@@ -292,22 +292,6 @@ uint  sfs_get_sexpr( char *input, FILE *fp ) {
     return S_OK;
 }
 
-
-int is_integer(char num)
-{
-    if (num>=0x30 && num<=0x39)
-        return 1;
-    else return 0;
-}
-
-int is_symbol(char sym)
-{
-    if((sym>=0x3F  && sym<=0x7A)|| (sym>=0x24 && sym<=0x27) || (sym>=0x2A && sym<=0x2F) || sym==0x21 ||sym==0x22)
-        return 1;
-    else return 0;
-}
-
-
 char get_next_char(char* input, uint* here)
 {	char c;
 	/*on incremente puis on prend le caractere*/
@@ -316,128 +300,23 @@ char get_next_char(char* input, uint* here)
 	return c;
 }
 
-object make_symbol(char* input,uint * here,char c)
-{
-	object atome=make_object(6);
-	char new_carac;
-	int i=1;
-	char symbole[STRLEN];
-	symbole[0]=c;
-	//printf("sym_deb=%s\n",symbole);
-	new_carac=get_next_char(input,here);
-	while(is_symbol(new_carac)||is_integer(new_carac))
-	{
-		symbole[i]=new_carac;
-		new_carac=get_next_char(input,here);
-		i++;
-	}
-	symbole[i]='\0';
-	//printf("sym=%s\n",symbole);
-	strcpy(atome->data.String,symbole);
-	//printf("symbole =%s\n",atome->data.String);
-	return atome;
-}
-
-object make_caractere(char* input,uint *here)
-{
-	object atome=make_object(1);
-	char new_carac;
-	int i=3;
-	char caractere[STRLEN];
-	caractere[0]='#';
-	caractere[1]=0x5C;
-	caractere[2]=input[(*here)];
-	new_carac=get_next_char(input,here);
-	if(!(is_symbol(new_carac)&& is_integer(caractere[2])) && (new_carac!='\0'))
-    {
-        caractere[0]='\0';
-        strcpy(atome->data.caractere,caractere);
-        return atome;
-    }
-	while(is_symbol(new_carac) || new_carac==0x28 || new_carac==0x29)
-	{
-		caractere[i]=new_carac;
-		new_carac=get_next_char(input,here);
-		i++;
-	}
-    if(!(is_symbol(caractere[i-1])&& is_integer(new_carac))&& (i>3))
-    {   caractere[0]='\0';
-        strcpy(atome->data.caractere,caractere);
-        return atome;
-    }
-	caractere[i]='\0';
-	strcpy(atome->data.caractere,caractere);
-	return atome;
-}
-
-object make_integer( char* input, uint * here,char c)
-{
-	object atome=make_object(0);
-	char next;
-	int integer=0;
-	integer = c-0x30;
-    next=get_next_char(input,here);
-	while (next>=0x30 && next<=0x39)
-	{
-        integer=integer*10+(next-0x30);
-		next=get_next_char(input,here);
-
-	}
-	atome->data.number.this.integer=integer;
-    //printf("atome=%d\n",atome->data.number.this.integer);
-   // printf("here=%d\n",*here);
-	return atome;
-}
-
-
-object make_string(char *input,uint * here)
-{
-	object atome=make_object(2);
-	char next;
-	int i=1;
-	char chaine[3*STRLEN];
-	chaine[0]='"';
-	next=get_next_char(input,here);
-	while ((next != 0x22))
-	{
-
-		chaine[i]=next;
-		next=get_next_char(input,here);
-		i++;
-		if(chaine[i-1]==0x5C && next==0x22)
-        {
-             chaine[i]=next;
-             next=get_next_char(input,here);
-             i++;
-        }
-
-	}
-	chaine[i]='"';
-	chaine[i+1]='\0';
-	(*here)++;
-
-	strcpy(atome->data.String,chaine);
-	return atome;
-}
-
-
 object sfs_read_atom( char *input, uint *here ) {
 
     	object atome = make_object(7);
         char c;
-       // printf("entree dans read_atom\n");
     	c=input[*here];
-        switch(c)   {
+        switch(c)
+        {
     	case '#' :
-    	   // printf("entre dans case\n");
        	 	c=get_next_char(input,here);
 	        if(c==0x5C)
        		 {
             		c=get_next_char(input,here);
             		atome=make_caractere(input,here);
-			return atome;}
+                    return atome;
+            }
         	else
-            {      // printf("entre dans le test true\n");
+            {       //creation du booleen
                 	if (c=='t')
                     {	atome->type=5;
                         atome->data.boolean=true;
@@ -445,57 +324,59 @@ object sfs_read_atom( char *input, uint *here ) {
                         return atome;
                     }
                 	else if (c=='f')
-			{	atome->type=5;
-				atome->data.boolean=false;
-				(*here)++;
-				return atome;}
-			else {ERROR_MSG("Atome possedant # invalide"); return NULL;}
+                    {	atome->type=5;
+                        atome->data.boolean=false;
+                        (*here)++;
+                        return atome;
+                    }
+                    else {WARNING_MSG("Booleen invalide"); return NULL;}
             }
+            break;
+        case '"' :
+            return make_string(input,here);
         break;
-    case '"' :
-        return make_string(input,here);
-
-        break;
-    }
-	if (c=='+' || c=='-')
-	{
-		c=get_next_char(input,here);
-		*here=(*here)-2;
-		if(c==' ')
-		{
-			c=get_next_char(input,here);
-			return make_symbol(input,here,c);}
-		else if(is_integer(c))
-		{	c=get_next_char(input,here);
-			if(c=='-')
-			{	c=get_next_char(input,here);
-				atome=make_integer(input,here,c);
-				atome->data.number.this.integer=(-1)*atome->data.number.this.integer;
-				return atome;}
-			else { c=get_next_char(input,here);
-				return make_integer(input,here,c);}
-		}
-	}
-    else if(is_symbol(c))
-    {
-        return make_symbol(input,here,c);
-    }
-    else if(is_integer(c))
-    {
-        return make_integer(input,here,c);
-    }
-	ERROR_MSG("Atome invalide");
-	return NULL;
+        }
+        if (c=='+' || c=='-')
+        {
+            c=get_next_char(input,here);
+            *here=(*here)-2;
+            if(c==' ')
+            {
+                c=get_next_char(input,here);
+                return make_symbol(input,here,c);}
+            else if(is_integer(c))
+            {	c=get_next_char(input,here);
+                if(c=='-')
+                {	c=get_next_char(input,here);
+                    atome=make_integer(input,here,c);
+                    atome->data.number.this.integer=(-1)*atome->data.number.this.integer;
+                    return atome;
+                }
+                else {
+                        c=get_next_char(input,here);
+                        return make_integer(input,here,c);
+                }
+            }
+        }
+        else if(is_symbol(c))
+        {
+            return make_symbol(input,here,c);
+        }
+        else if(is_integer(c))
+        {
+            return make_integer(input,here,c);
+        }
+        ERROR_MSG("Atome invalide");
+        return NULL;
 }
+
 object sfs_read( char *input, uint *here ) {
-    //printf("entree dans fonction read\n");
-    while(input[(*here)]==' '||input[*here]=='	')
+      while(input[(*here)]==' '||input[*here]=='	')
     {
         (*here)++;
     }
     if ( input[*here] == '(' ) {
-           // printf("entre dans (\n");
-        if ( input[(*here)+1] == ')' ) {
+         if ( input[(*here)+1] == ')' ) {
             *here += 2;
             return nil;
         }
@@ -505,53 +386,35 @@ object sfs_read( char *input, uint *here ) {
         }
     }
     else {
-
-       // printf("entree dans sans (\n");
-        return sfs_read_atom( input, here );
+           return sfs_read_atom( input, here );
     }
 }
 
 object sfs_read_pair( char *stream, uint *i ) {
 
     object paire = make_object(3);
-  // printf("entree dans read_pair\n");
     while(stream[(*i)]==' '||stream[*i]=='	')
     {
         (*i)++;
     }
-   // printf("char[%d]=%c\n",(*i),stream[(*i)]);
     if(stream[(*i)]==')')
     {
         paire->data.pair.car=make_nil();
-        printf("type car=%d\n",paire->data.pair.car->type);
         paire->data.pair.cdr=make_nil();
-        printf("type cdr=%d\n",paire->data.pair.cdr->type);
         (*i)++;
-      /* printf("cdr=%p\n",&(paire->data.pair.cdr));
-        printf("point cdr =%p\n",paire->data.pair.cdr);
-        printf("cdr->type =%d\n",paire->data.pair.cdr->type);*/
-    }
+     }
     else
     {
         paire->data.pair.car=sfs_read(stream,i);
-        //printf("type car=%d\n",paire->data.pair.car->type);
-       /* printf("type du car=%d\n",paire->data.pair.car->type);
-        printf("i=%d et char[%d]=%c\n",*i,*i,stream[(*i)]);*/
-        //printf("charav[%d]=&%c&\n",*i,stream[*i]);
         while(stream[(*i)]==' '||stream[*i]=='	')
         {
             (*i)++;
         }
-       // printf("charap[%d]=&%c&\n",*i,stream[*i]);
         if(stream[(*i)]==')')
         {
             paire->data.pair.cdr=make_nil();
-           // printf("type cdr=%d\n",paire->data.pair.cdr->type);
             (*i)++;
-          /*  printf("cdr=%p\n",&(paire->data.pair.cdr));
-        printf("point cdr =%p\n",paire->data.pair.cdr);
-        printf("cdr->type =%d\n",paire->data.pair.cdr->type);*/
-        }
+         }
         else {paire->data.pair.cdr=sfs_read_pair(stream,i);}
     }
     return paire;
